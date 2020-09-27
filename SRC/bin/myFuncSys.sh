@@ -215,7 +215,8 @@ f${FN} $*
 
 
 f(){
-export HOST=$(hostname -s)
+export HOST=$( hostname -s )
+
 mount /dev/${HOST}/root /mnt/${HOST}
 mount /dev/${HOST}/efi  /mnt/${HOST}/boot/efi
 for i in dev dev/pts dev/shm proc sys  run; do mount -o bind /$i /mnt/${HOST}/$i; done
