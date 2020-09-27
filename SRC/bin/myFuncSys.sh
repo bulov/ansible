@@ -178,31 +178,8 @@ WantedBy = multi-user.target
 END
 ${DEB} systemctl daemon-reload
 ${DEB} systemctl enable --now mnt-${NM}.mount
-} ############################################################################
-finit_xbindkeysrc() {
-# myFuncSys.sh init_xbindkeysrc
-
-if [ ! -f ${SRC}/etc/default/xbindkeysrc  ]; then
-cat <<EOL >${SRC}/etc/default/xbindkeysrc
-"qdbus org.kde.kglobalaccel /component/kwin invokeShortcut view_zoom_in"
-    alt + b:4
-"qdbus org.kde.kglobalaccel /component/kwin invokeShortcut view_zoom_out"
-    alt + b:5
-EOL
-
-fi
-#
-# xbindkeys
-#
-if [ ! -x ${SRC}/etc/X11/xinit/xinitrc.d/xbindkeys.sh  ]; then
-mkdir -p ${SRC}/etc/X11/xinit/xinitrc.d/
-cat <<EOL >${SRC}/etc/X11/xinit/xinitrc.d/xbindkeys.sh
-if [ -x /usr/bin/xbindkeys ]; then /usr/bin/xbindkeys -f /etc/default/xbindkeysrc > /dev/null & fi
-EOL
-chmod +x ${SRC}/etc/X11/xinit/xinitrc.d/xbindkeys.sh
-fi
-
-} ############################################################################
+}
+############################################################################
 #set -x
 export HOST=$(hostname -s)
 export DEB=""
@@ -215,18 +192,20 @@ f${FN} $*
 
 
 f(){
-   export HOST=$( hostname -s )
+export HOST=$(hostname -s)
 
-   mount /dev/${HOST}/root /mnt/${HOST}
-   mount /dev/${HOST}/efi  /mnt/${HOST}/boot/efi
-   for i in dev dev/pts dev/shm proc sys  run; do mount -o bind /$i /mnt/${HOST}/$i; done
-   chroot /mnt/${HOST} /usr/bin/bash --login
-   mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+mount /dev/${HOST}/root /mnt/${HOST}
+mount /dev/${HOST}/efi  /mnt/${HOST}/boot/efi
+for i in dev dev/pts dev/shm proc sys  run; do mount -o bind /$i /mnt/${HOST}/$i; done
+chroot /mnt/${HOST} /usr/bin/bash --login
+mount -t efivarfs efivarfs /sys/firmware/efi/efivars
 
-   efibootmgr -c -d /dev/131kvm10/efi  -w -L "131kvm10" -l '\EFI\fedora\shimx64-fedora.efi'
-   efibootmgr -c -d /dev/sdb -p 0 -w -L "131kvm10" -l '\EFI\fedora\shimx64-fedora.efi'
+efibootmgr -c -d /dev/131kvm10/efi  -w -L "131kvm10" -l '\EFI\fedora\shimx64-fedora.efi'
+efibootmgr -c -d /dev/sdb -p 0 -w -L "131kvm10" -l '\EFI\fedora\shimx64-fedora.efi'
 
-   ver=$( uname --kernel-release )
-   dracut -f /boot/initramfs-${ver}.img ${ver}
+ver=$( uname --kernel-release )
+dracut -f /boot/initramfs-${ver}.img ${ver}
+
+
+
 }
-
