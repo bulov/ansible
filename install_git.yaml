@@ -1,0 +1,11 @@
+- hosts: "{{ hostname }}"
+  gather_facts: False
+  vars:
+    - packages: ["git", "nmap"]
+  tasks:
+    - name: Installing {{ packages }} on {{ hostname }}
+      dnf:
+        name: "{{ item }}"
+        state: present
+      with_items: "{{ packages }}"
+  become: yes
