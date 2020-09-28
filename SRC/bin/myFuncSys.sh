@@ -192,19 +192,19 @@ f${FN} $*
 
 
 f(){
-export HOST=$(hostname -s)
+   export HOST=$(hostname -s)
 
-mount /dev/${HOST}/root /mnt/${HOST}
-mount /dev/${HOST}/efi  /mnt/${HOST}/boot/efi
-for i in dev dev/pts dev/shm proc sys  run; do mount -o bind /$i /mnt/${HOST}/$i; done
-chroot /mnt/${HOST} /usr/bin/bash --login
-mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+   mount /dev/${HOST}/root /mnt/${HOST}
+   mount /dev/${HOST}/efi  /mnt/${HOST}/boot/efi
+   for i in dev dev/pts dev/shm proc sys  run; do mount -o bind /$i /mnt/${HOST}/$i; done
+   chroot /mnt/${HOST} /usr/bin/bash --login
+   mount -t efivarfs efivarfs /sys/firmware/efi/efivars
 
-efibootmgr -c -d /dev/131kvm10/efi  -w -L "131kvm10" -l '\EFI\fedora\shimx64-fedora.efi'
-efibootmgr -c -d /dev/sdb -p 0 -w -L "131kvm10" -l '\EFI\fedora\shimx64-fedora.efi'
+   efibootmgr -c -d /dev/131kvm10/efi  -w -L "131kvm10" -l '\EFI\fedora\shimx64-fedora.efi'
+   efibootmgr -c -d /dev/sdb -p 0 -w -L "131kvm10" -l '\EFI\fedora\shimx64-fedora.efi'
 
-ver=$( uname --kernel-release )
-dracut -f /boot/initramfs-${ver}.img ${ver}
+   ver=$( uname --kernel-release )
+   dracut -f /boot/initramfs-${ver}.img ${ver}
 
 
 
