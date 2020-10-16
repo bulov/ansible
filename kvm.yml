@@ -19,7 +19,7 @@
     register: libvirtd
     become: yes
 
-  - name: Add the user 'adminstrator' with a specific primary group of 'libvirt'
+  - name: Add the user 'admin' with a specific primary group of 'libvirt'
     user:
        name: admin
        comment: "DIT admin"
@@ -28,11 +28,12 @@
     become: yes
 
   - name: link /usr/libexec/qemu-kvm -> /usr/bin/qemu-kvm
-    user:
-       name: administrator
-       comment: DIT
-       groups: libvirt
-       append: yes
+    file:
+       src:  /usr/bin/qemu-kvm
+       dest: /usr/libexec/qemu-kvm
+       owner: libvirt
+       group: libvirt
+       state: link
     become: yes
 
   - name:  start libvirtd
