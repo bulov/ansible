@@ -1,26 +1,38 @@
 - hosts: all
   vars:
     USER: admin
-    PSW1:  "{{ USER }}2020"
-    PSW2:  "{{ USER }}2020"
+    PSW1:  "{{USER}}2020"
+    PSW2:  "{{inventory_hostname}}2020"
+    cHost: "{{ client }}"
+    PSW3:  "{{cHost}}2020"
+
   tasks:
-  - name: step 1.6 gen-req HOST
-    expect:
-       command: ./easyrsa gen-req {{ HOST }}
-       timeout: 60
-       responses:
-           (.*)Enter(.*): "{{ PSW2 }}\n"
-           (.*)Verifying(.*): "{{ PSW2 }}\n"
-           (.*)Country(.*): "\n"
-           (.*)State(.*): "\n"
-           (.*)Locality(.*): "\n"
-           (.*)Organization N(.*): "\n"
-           (.*)Organizational(.*): "\n"
-           (.*)Common(.*): "\n"
-           (.*)Email(.*): "\n"
-    args:
-       chdir: ~{{ USER  }}/pki
-       creates: ~{{ USER }}/pki/pki/reqs/{{ HOST }}.req
+  - name: step 1.1 install the latest version of easy-rsa python-pexpect
+    package:
+       name:
+         - easy-rsa
+         - python-pexpect
+       state: latest
+    become: yes
+
+  - name: step 1.2 copy files pki
+    copy:
+      src: /usr/share/easy-rsa/3/
+      dest: ~{{ USER  }}/pki
+      remote_src: yes
+      owner: admin
+      group: admin
+#      mode: u=rw,g=r,o=r
+    become: yes
+
+  - name: step 1.3 copy file vars
+    copy:
+      src: SRC/varsPKI
+      dest: ~{{ USER  }}/pki/vars
+      owner: "{{ USER  }}"
+      group: "{{ USER  }}"
+      mode: u=rw,g=r,o=r
+    become: yes
 
   - name: step 1.4 init-pki
     command: ./easyrsa init-pki
@@ -46,29 +58,36 @@
        chdir: ~{{ USER  }}/pki
        creates: ~{{ USER }}/pki/pki/ca.crt
 
-  - name: step 1.2 copy files pki
-    copy:
-      src: /usr/share/easy-rsa/3/
-      dest: ~{{ USER  }}/pki
-      remote_src: yes
-      owner: admin
-      group: admin
-#      mode: u=rw,g=r,o=r
-    become: yes
+  - name: step 1.6 gen-req {{inventory_hostname}}
+    expect:
+       command: ./easyrsa gen-req {{inventory_hostname}}
+       responses:
+           (.*)Enter(.*): "{{ PSW2 }}\n"
+           (.*)Verifying(.*): "{{ PSW2 }}\n"
+           (.*)Country(.*): "\n"
+           (.*)State(.*): "\n"
+           (.*)Locality(.*): "\n"
+           (.*)Organization N(.*): "\n"
+           (.*)Organizational(.*): "\n"
+           (.*)Common(.*): "\n"
+           (.*)Email(.*): "\n"
+    args:
+       chdir: ~{{ USER  }}/pki
+       creates: ~{{ USER }}/pki/pki/private/{{inventory_hostname}}.key
 
-  - name: step 1.3 copy file vars
-    copy:
-      src: SRC/varsPKI
-      dest: ~{{ USER  }}/pki/vars
-      owner: "{{ USER  }}"
-      group: "{{ USER  }}"
-      mode: u=rw,g=r,o=r
-    become: yes
+  - name: step 1.7  sign-req server {{inventory_hostname}}
+    expect:
+       command: ./easyrsa sign-req server {{inventory_hostname}}
+       responses:
+           (.*)Type(.*): "yes\n"
+           (.*)Enter(.*): "{{ PSW1 }}\n"
+    args:
+       chdir: ~{{ USER  }}/pki
+       creates: ~{{ USER }}/pki/pki/issued/{{inventory_hostname}}.crt
 
-  - name: install the latest version of easy-rsa python-pexpect
-    package:
-       name:
-         - easy-rsa
-         - python-pexpect
-       state: latest
-    become: yes
+  - name: step 1.8  gen-dh   Diffie–Hellman
+    command: ./easyrsa gen-dh
+    args:
+       chdir: ~{{ USER  }}/pki
+       creates: ~{{ USER }}/pki/pki/dh.pem
+
