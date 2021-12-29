@@ -31,8 +31,10 @@
     file:
        src:  /usr/bin/qemu-kvm
        dest: /usr/libexec/qemu-kvm
-       owner: libvirt
-       group: libvirt
+#       owner: libvirt
+#       group: libvirt
+       owner: root
+       group: root
        state: link
     become: yes
 

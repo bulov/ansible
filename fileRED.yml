@@ -1,0 +1,38 @@
+# ansible-playbook fileRED.yml   -l ${HOST}
+
+- hosts: all
+  vars:
+   DSTDIR:     /usr/local
+
+  tasks:
+  - name: '/var/tmp/ret{m,t}'
+    file:
+       path:   "{{ item.d }}"
+       state:  directory
+       mode:  'u=rwxs,g=rwxs,o=rwxt'
+    with_items:
+       - { d: '/var/tmp/retm'}
+       - { d: '/var/tmp/rett'}
+       - { d: '{{ DSTDIR }}/red'}
+
+  - name: Copy file hosts RED
+    copy:
+      src:  "{{ item.s }}"
+      dest: "{{ item.d }}"
+      owner: root
+      group: root
+      mode: "{{ item.m }}"
+    with_items:
+       - { m: '0755' ,s: '{{ DSTDIR }}/bin/re'                    ,d: '{{ DSTDIR }}/bin/re'                      }
+       - { m: '0755' ,s: '{{ DSTDIR }}/bin/rpl'                   ,d: '{{ DSTDIR }}/bin/rpl'                     }
+       - { m: '0644'   ,s: '{{ DSTDIR }}/red/init.dflt'             ,d: '{{ DSTDIR }}/red/init.dflt'               }
+       - { m: '0644'   ,s: '{{ DSTDIR }}/red/init.xterm-256color'   ,d: '{{ DSTDIR }}/red/init.xterm-256color'     }
+       - { m: '0644'   ,s: '{{ DSTDIR }}/red/xterm-256color.infocmp',d: '{{ DSTDIR }}/red/xterm-256color.infocmp'  }
+    become: yes
+
+  - name: tic
+    command: tic '{{ DSTDIR }}/red/xterm-256color.infocmp'
+#    args:
+#       creates: /usr/share/terminfo/x/xterm-256color
+    become: yes
+

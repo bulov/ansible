@@ -1,0 +1,44 @@
+- hosts: all
+  tasks:
+  - name: install the latest version of package
+    package:
+       name:
+         - ssmtp
+         - mailx
+       state: latest
+    become: yes
+  - name:  tuning ssmtp.conf
+    lineinfile:
+          dest: /etc/ssmtp/ssmtp.conf
+          regexp: "{{ item.regexp }}"
+          line: "{{ item.line }}"
+          state: present
+          backup: yes
+    with_items:
+        - { regexp: '^mailhub=mail',    line: "mailhub=smtp.mail.ru:465" }
+        - { regexp: '^AuthMethod=',     line: "AuthMethod=LOGIN" }
+        - { regexp: '^AuthUser=',       line: "AuthUser=VG.Bulov" }
+        - { regexp: '^AuthPass=',       line: "AuthPass=BVG2016vova" }
+        - { regexp: '^UseTLS=',         line: "UseTLS=YES" }
+        - { regexp: '^FromLineOverride',line: "FromLineOverride=YES" }
+
+
+  - name:  tuning /etc/ssmtp/revaliases
+    lineinfile:
+          dest: /etc/ssmtp/revaliases
+          regexp: "{{ item.regexp }}"
+          line: "{{ item.line }}"
+          state: present
+          backup: yes
+    with_items:
+        - { regexp: '^root',            line: "root:VG.Bulov@mail.ru:smtp.mail.ru:465" }
+        - { regexp: '^admin',           line: "admin:VG.Bulov@mail.ru:smtp.mail.ru:465" }
+
+
+  - name:  test send mail
+    shell: echo | mailx -s 'test send mail root'   V.Bulov@gmail.com
+    become: yes
+
+
+#perl -MMIME::Base64 -e 'print encode_base64("VG.Bulov@mail.ru");'
+#perl -MMIME::Base64 -e 'print encode_base64("BVG2016vova");'

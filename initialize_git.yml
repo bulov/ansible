@@ -1,0 +1,72 @@
+- hosts: all
+  vars:
+       user: git
+       users: ["ansible", "admin"]
+       password: '$6$Vktv4WMaBDbCVL2H$tDhOivAjW3NLdNtBHBeK24jZA1VoJhMJ9Y5KcwPAXv6hwozF3CWd7GwteVLIQqgYCkKAZISoDK/JHZEu8vJ9W1'
+       ssh_key_filename: '/'
+       packages: ["git", "nmap"]
+       git_base_dir: '/home/git/'
+       project: 'aga'
+  gather_facts: no
+  remote_user: admin
+  become: true
+
+
+  tasks:
+  - name: Installing "{{ packages }}" on "{{ hostname }}"
+    package:
+       name: "{{ item }}"
+       state: latest
+    loop: "{{ packages }}"
+    become: yes
+
+  - name: Add a new user named git
+    user:
+       name: "{{ user }}"
+       shell: /usr/bin/git-shell
+       password: "{{ password }}"
+
+  - name: Create a directory .ssh if it does not exist
+    file:
+       path: /home/git/.ssh/
+       state: directory
+       mode: '0700'
+       owner: "{{ user }}"
+       group: "{{ user }}"
+
+
+  - name: Deploy SSH Key
+    authorized_key: user="{{ user }}"
+                    key="{{ lookup('file', '/home/ansible/.ssh/id_rsa.pub') }}"
+                    state=present
+
+
+  - name: gituser can only use SSH to push and pull Git repositories 1
+    command: grep git-shell /etc/shells
+    register: rc
+    failed_when: " 0 != rc.rc "
+    changed_when: false
+#  - debug: var=rc
+
+  - name: gituser can only use SSH to push and pull Git repositories 2
+    command: echo `which git-shell` >> /etc/shells
+    when: " 0 != rc.rc"
+
+
+  - name: git init --bare {{ project }} with the command module
+    command: git init --bare {{ project }}
+    args:
+       chdir: "{{ git_base_dir }}"
+       creates: "{{ git_base_dir }}/{{ project }}"
+    become_user: git
+    become: true
+
+
+  - name: Add the users "{{ users }}"  appending the group 'git'
+    user:
+       name: "{{ item }}"
+       groups: git
+       append: yes
+    loop: "{{ users }}"
+    become: yes
+

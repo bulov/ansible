@@ -1,0 +1,53 @@
+- hosts: all
+  tasks:
+#  - name: install the latest version of package htop
+#    package:
+#       name:
+#         - epel-release
+#       state: latest
+#    become: yes
+
+  - name: install the latest version of package
+    package:
+       name:
+         - nmap
+         - strace
+         - dump
+         - mc
+         - gpm
+         - htop
+         - iperf3
+         - ncdu
+         - iftop
+         - iotop     fi
+       state: latest
+    become: yes
+
+
+#  - name: firewall for iperf3
+#      firewall-cmd --permanent --add-port=5201/tcp
+w;e"adl;"ad;w?S>,dc?>SA<dC?>A<sD?>,c#      firewall-cmd --permanent --add-port=5201/udp
+#      firewall-cmd --reload
+
+  - name: Add port to firewalld  for iperf3
+    firewalld:
+      port: "{{ item }}"
+      permanent: yes
+      immediate: yes
+      state: enabled
+    loop:
+       - 5201/tcp
+       - 5201/udp
+
+
+
+
+
+
+
+
+
+
+
+
+

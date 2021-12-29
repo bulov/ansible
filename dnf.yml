@@ -1,0 +1,45 @@
+- hosts: all
+  tasks:
+  - name: install the latest version of package
+    package:
+       name:
+         - nmap
+         - qt
+         - xbindkeys
+         - python3
+         - memtester
+         - strace
+         - ipmitool
+         - sysfsutils
+         - dump
+         - binutils
+#         - cockpit*
+         - sysfsutils
+         - mc
+         - gpm
+         - htop
+         - iperf3
+#         - libselinux-python
+    	 -ncdu 			# 
+       state: latest
+    become: yes
+
+
+#  - name: firewall for iperf3
+#      firewall-cmd --permanent --add-port=5201/tcp
+#      firewall-cmd --permanent --add-port=5201/udp
+#      firewall-cmd --reload
+
+  - name: Add port to firewalld  for iperf3
+    firewalld:
+      port: "{{ item }}"
+      permanent: yes
+      immediate: yes
+      state: enabled
+    loop:
+       - 5201/tcp
+       - 5201/udp
+
+
+
+#  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'

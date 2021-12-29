@@ -1,0 +1,102 @@
+# ansible-playbook admin.yml   -l ${HOST}  --extra-vars "ansible_sudo_pass=123" -k
+- hosts: all
+  vars:
+       admin_password: '$6$Vktv4WMaBDbCVL2H$tDhOivAjW3NLdNtBHBeK24jZA1VoJhMJ9Y5KcwPAXv6hwozF3CWd7GwteVLIQqgYCkKAZISoDK/JHZEu8vJ9W1'
+       password: 123
+       USER:       admin
+#       ansible_become: yes
+#       ansible_become_method: sudo
+#       ansible_become_pass: "{{ password }}"
+#       ansible_become_pass:
+#       ansible_become_pass: "{{ vault_ansible_password }}"
+#  gather_facts: no
+#  remote_user: root
+  remote_user: admin
+#  become: true
+#  become: yes
+#  become_method: sudo
+
+#  - name: ssh host
+#    expect:
+#       command: runuser -u {{ USER }} ssh {{ HOST }}
+#       responses:
+#           (.*)Are you sure you want(.*): "{{ yes }}\n"
+#           (.*)password(.*): "{{ password }}\n"
+#    no_log: true
+
+  tasks:
+  - debug:  var=ansible_play_hosts
+
+  - name: Make sure the admin users are present
+    user:
+       name: admin
+       shell: /bin/bash
+       comment: "Administrator" 
+       generate_ssh_key: yes
+       ssh_key_bits: 2048
+       ssh_key_file: .ssh/id_rsa	
+#       password: "{{ admin_password }}"
+       password: "{{ admin_password }}"
+#       sudo_user: admin
+#    sudo: yes
+
+
+  - name: Add admin user to the sudoers
+    copy:
+         dest: "/etc/sudoers.d/admin"
+         content: "admin  ALL=(ALL)  NOPASSWD: ALL"
+
+  - name: Check admin pub keys are present on host1
+    stat:
+      path: /home/admin/.ssh/id_rsa.pub
+    register: stat_result
+
+  - name: Generate pub keys on host1 if non-existing
+    user:
+      name: admin
+      generate_ssh_key: yes
+      ssh_key_bits: 4096
+    when: stat_result.stat.exists == False
+
+#  - name: Downloading pub key from host1 to the control machine
+#    command: scp admin@{{ansible_host}}:/homes/admin/.ssh/id_rsa.pub /tmp/
+#      delegate_to: 127.0.0.1
+#  - name: Copy pub key of host1 to host2
+#    authorized_keys:
+#      user: admin
+#      key: "{{ lookup('file', '/tmp/id_rsa.pub') }}"
+#      state: present
+
+  - name: Deploy SSH Key
+    authorized_key:
+       user: admin
+       key: "{{ lookup('pipe', 'sudo cat /home/admin/.ssh/id_rsa.pub') }}"
+       state: present
+
+#       key: "{{ lookup('pipe', 'ssh admin@localhost cat /home/admin/.ssh/id_rsa.pub') }}"
+
+#  - name: Disable Password Authentication
+#    lineinfile:
+#          dest=/etc/ssh/sshd_config
+#          regexp='^PasswordAuthentication'
+#          line="PasswordAuthentication no"
+#          state=present
+#          backup=yes
+
+  - name: Disable Root Login
+    lineinfile:
+          dest=/etc/ssh/sshd_config
+          regexp='^PermitRootLogin'
+          line="PermitRootLogin no"
+          state=present
+          backup=yes
+    notify:
+      - restart sshhandlers:
+
+  - name: restart ssh
+    service:
+      name=sshd
+      state=restarted
+
+
+

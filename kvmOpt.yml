@@ -1,0 +1,7 @@
+- hosts: all
+  tasks:
+  - name: delete ModemManager
+    systemd:
+       name: ModemManager
+       state: stopped
+       enabled: no

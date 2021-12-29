@@ -1,0 +1,17 @@
+- hosts: all
+  tasks:
+  - name: Ensure host is present
+    community.general.ipa_host:
+       name: freeIPA.BVG.tlt.ru
+       description: Example host reeIPA.BVG.tlt.ru
+       ip_address: 192.168.0.16
+       ns_host_location: HomeLab
+       ns_os_version: Fedora33
+       ns_hardware_platform: VM
+       mac_address:
+       - "52:54:00:7f:7a:2a"
+       state: present
+       community.general.ipa_host: freeIPA.BVG.tlt.ru
+       ipa_user: admin
+       ipa_pass: 123
+

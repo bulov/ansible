@@ -1,0 +1,55 @@
+- hosts: CA
+#- hosts: all
+  vars:
+    USER: admin
+    PSW1:  "{{USER}}2020"
+    PSW2:  "{{inventory_hostname}}2020"
+    cHost: "{{ client }}"
+    PSW3:  "{{cHost}}2020"
+
+  tasks:
+  - name: step 2.1 gen-req {{cHost}}
+    expect:
+       command: ./easyrsa gen-req {{cHost}}
+       responses:
+           (.*)Enter(.*): "{{ PSW3 }}\n"
+           (.*)Verifying(.*): "{{ PSW3 }}\n"
+           (.*)Country(.*): "\n"
+           (.*)State(.*): "\n"
+           (.*)Locality(.*): "\n"
+           (.*)Organization N(.*): "\n"
+           (.*)Organizational(.*): "\n"
+           (.*)Common(.*): "\n"
+           (.*)Email(.*): "\n"
+    args:
+       chdir: ~{{ USER  }}/pki
+       creates: ~{{ USER }}/pki/pki/private/{{cHost}}.key
+
+  - name: step 2.2  sign-req client {{cHost}}
+    expect:
+       command: ./easyrsa sign-req client {{cHost}}
+       responses:
+           (.*)Type(.*): "yes\n"
+           (.*)Enter(.*): "{{ PSW1 }}\n"
+    args:
+       chdir: ~{{ USER  }}/pki
+       creates: ~{{ USER }}/pki/pki/issued/{{cHost}}.crt
+
+
+  - name: step 2.3 Transfer  ( pull )  file from CA to client {{cHost}}
+    synchronize:
+       src:    ~{{ USER }}/pki/pki/issued/{{cHost}}.crt
+       dest:   /tmp/{{cHost}}.crt
+       mode: pull
+    delegate_to: "{{cHost}}"
+
+
+
+#  - name: step 2.4  puts file from {{CA}} to {{cHost}}
+#    hostname:
+#       name="{{ inventory_hostname }}"
+#    copy:
+#       src:    /tmp/{{cHost}}.crt
+#       dest:   ~{{ USER }}/.ssh/{{cHost}}.crt
+#       flat: yes
+

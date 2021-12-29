@@ -1,0 +1,58 @@
+- hosts: all
+  tasks:
+  - name: Copy file hosts
+    copy:
+      src: /etc/hosts
+      dest: /etc/hosts
+      owner: root
+      group: root
+      mode: u=rw,g=r,o=r
+    become: yes
+
+  - name: Copy file myfunc.sh
+    copy:
+      src: SRC/etc/profile.d/myfunc.sh
+      dest: /etc/profile.d/myfunc.sh
+      owner: root
+      group: root
+      mode: u=rw,g=r,o=r
+    become: yes
+
+  - name: Copy file dumpVR
+    copy:
+      src: SRC/bin/dumpVR
+      dest: /usr/local/bin
+      owner: root
+      group: root
+      mode: u=rw,g=rx,o=rx
+    become: yes
+
+  - name: Copy file myFuncSys.sh
+    copy:
+      src: SRC/bin/myFuncSys.sh
+      dest: /usr/local/bin
+      owner: root
+      group: root
+      mode: u=rw,g=rx,o=rx
+    become: yes
+
+  - name: Copy file scli.sh
+    copy:
+      src: SRC/bin/scli.sh
+      dest: /usr/local/bin
+      owner: root
+      group: root
+      mode: u=rw,g=rx,o=rx
+    become: yes
+
+
+  - name: Copy file RSYNC
+    copy:
+      src: SRC/bin/RSYNC
+      dest: /usr/local/bin
+      owner: root
+      group: root
+      mode: u=rw,g=rx,o=rx
+    become: yes
+
+

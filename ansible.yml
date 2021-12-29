@@ -1,0 +1,31 @@
+#ansible-playbook ansible.yml   -l ${HOST}  --extra-vars "ansible_ssh_pass=123"
+
+- hosts: all
+  vars:
+       users: ansible
+       ansible_password: '$6$Vktv4WMaBDbCVL2H$tDhOivAjW3NLdNtBHBeK24jZA1VoJhMJ9Y5KcwPAXv6hwozF3CWd7GwteVLIQqgYCkKAZISoDK/JHZEu8vJ9W1'
+#       ssh_key_filename: '/'
+#      gather_facts: no
+  remote_user: admin
+  become: true
+
+
+  tasks:
+  - name: Add a new user named ansible
+    user:
+       name: ansible
+       shell: /bin/bash
+       password: "{{ ansible_password }}"
+       generate_ssh_key: yes
+       ssh_key_bits: 2048
+       ssh_key_file: .ssh/id_rsa
+
+  - name: Add ansible user to the sudoers
+    copy:
+         dest: "/etc/sudoers.d/ansible"
+         content: "ansible  ALL=(ALL)  NOPASSWD: ALL"
+
+  - name: Deploy SSH Key
+    authorized_key: user=ansible
+                    key="{{ lookup('file', '/home/ansible/.ssh/id_rsa.pub') }}"
+                    state=present

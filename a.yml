@@ -1,0 +1,21 @@
+# ansible-playbook a.yml -l kvmHD0*  --extra-var Host=kvmHD01
+
+- hosts: all
+  vars:
+  remote_user: admin
+
+  tasks:
+  - name: Deploy SSH Key
+    authorized_key:
+       user: admin
+       key: "{{ lookup('pipe', 'ssh admin@{{Host}} cat /home/admin/.ssh/id_rsa.pub') }}"
+       state: present
+
+  - name: tell the host about our servers it might want to ssh to
+    known_hosts:
+       path: /home/admin/.ssh/known_hosts
+       name: "{{ Host }}"
+       key: "{{ lookup('pipe', 'ssh-keyscan -t ecdsa-sha2-nistp256 {{ Host }}') }}"
+       state: present
+
+#       key: "{{ lookup('pipe', 'ssh admin@{{Host}} cat /etc/ssh/ssh_host_ecdsa_key.pub') }}"

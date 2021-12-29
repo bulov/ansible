@@ -1,0 +1,9 @@
+- hosts: erlang
+  tasks:
+  - name: install the latest version of package
+    package:
+       name:
+         - erlang
+       state: latest
+    become: yes
+

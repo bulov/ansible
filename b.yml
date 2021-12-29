@@ -1,0 +1,21 @@
+# ansible-playbook a.yml -l $HOST
+
+- hosts: all
+  vars:
+       USER:   admin
+       HOST:   liveCD
+
+  tasks:
+
+  - debug:  var=ansible_play_hosts
+  - debug:  var=ansible_play_batch
+
+  - name: ssh host
+    connection: local
+    expect:
+       command: runuser -u {{ USER }} ssh {{ ansible_play_hosts }}
+       responses:
+           (.*)Are you sure you want(.*): "{{ yes }}\n"
+           (.*)password(.*): "{{ password }}\n"
+#       no_log: true
+

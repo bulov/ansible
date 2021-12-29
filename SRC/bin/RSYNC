@@ -1,0 +1,44 @@
+:
+help(){
+cat <<EoL
+$*
+${!#}
+parm less $1
+####################################
+# RSYNC /home/v.bulov
+# RSYNC /home/v.bulov FedoraW:
+####################################
+EoL
+exit -1
+}
+fmain(){
+DIR=$1
+DIR_TO=$2
+set -x
+HOST=$( IFS=: ; set ${DIR_TO} ; echo $1 )
+[ _${HOST} != _${DIR_TO} ] && {
+   SSH="ssh -c blowfish"
+   dir_to=$( IFS=: ; set ${DIR_TO} ; echo $2 )
+   [ _${dir_to} = _ ] && {
+       DIR_TO=${DIR_TO}/${DIR}
+   }
+}
+#   exec rsync -avx --progress -e                   --delete ${DIR}/  "${DIR_TO}/"
+   exec ${PRG} -aXA --progress -e ${SSH} --delete ${DIR}/  ${DIR_TO}/
+#Вот чтобы типа синхронизировать каталоги  /home/user/KATALOG с локальной на удаленную host.expample.com  :
+#
+#cd /home/$USER
+#set -x
+#rsync -aXA --progress -e "ssh -c blowfish" --delete  $DIR/  $USER@$HOST:$DIR/
+#set +x
+#              �
+#если наоборот с удаленной на локальную -
+#cd /home/user
+# rsync -avx -e "ssh -c blowfish" --delete $USER@host.example.com:/home/user/KATALOG .
+}
+PRG=rsync
+[ _debug = _${!#} -o _deb = _${!#} ] && {
+   export PRG="echo $PRG"
+}
+[ $# -lt 2 ]  && help  $#
+fmain $@

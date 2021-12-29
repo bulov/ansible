@@ -1,0 +1,66 @@
+# ansible-playbook dnf_VNC.yml   -l ${HOST}
+
+- hosts: all
+  vars:
+    DISPLAY:   7
+    PSW1:      123456
+    USER:      admin
+
+  tasks:
+
+  - name: install the latest version of package
+    package:
+       name:
+         - tigervnc-server
+       state: latest
+    become: yes
+
+  - name:  tuning /etc/tigervnc/vncserver.users
+    lineinfile:
+       dest: /etc/tigervnc/vncserver.users
+       regexp: "{{ item.regexp }}"
+       line: "{{ item.line }}"
+       state: present
+       backup: yes
+    with_items:
+       - { regexp: '^:{{ DISPLAY }}=',    line: ":{{ DISPLAY }}={{ USER }}" }
+
+  - name: vncpasswd
+    expect:
+       command: runuser -u {{ USER }} vncpasswd
+       responses:
+           (.*)Password(.*): "{{ PSW1 }}\n"
+           (.*)Verify(.*): "{{ PSW1 }}\n"
+           (.*)Would you(.*): "y\n"
+    args:
+       chdir: ~{{ USER  }}
+       creates: ~{{ USER }}/.vnc/passwd
+    no_log: true
+
+
+  - name: Created symlink
+    file:
+       dest:    /etc/systemd/system/multi-user.target.wants/vncserver@:{{ DISPLAY }}.service
+       src:    /usr/lib/systemd/system/vncserver@.service
+       state: link
+    become: yes
+
+  - name: Just force systemd to re-execute itself (2.8 and above)
+    ansible.builtin.systemd:
+       daemon_reexec: yes
+
+
+  - name: Make sure a service unit is running
+    ansible.builtin.systemd:
+       name:       vncserver@:{{ DISPLAY }}.service
+       state:      started
+       enabled:    yes
+
+  - name: Add port to firewalld  for VNC
+    firewalld:
+      port: "{{ item }}"
+      permanent: yes
+      immediate: yes
+      state: enabled
+    loop:
+       - 590{{ DISPLAY }}/tcp

@@ -1,0 +1,23 @@
+
+- hosts: all
+  tasks:
+  - name: install the latest version of package
+    package:
+       name:
+         - nginx
+       state: latest
+    become: yes
+
+
+  - name: Make sure a service is running
+    systemd: state=started name=nginx
+
+
+# Gather status info from nginx on localhost with a custom timeout of 20 seconds
+# ansible-galaxy collection install community.general !!!
+  - name: Get current http stats
+    community.general.nginx_status_info:
+      url: http://localhost/nginx_status
+      timeout: 20
+    register: result
+

@@ -1,0 +1,19 @@
+- hosts: all
+
+  tasks:
+  - name: DNS not found 1
+    command: grep '#DNS=' /etc/systemd/resolved.conf
+    register: rc
+    ignore_errors: yes
+#    failed_when: " 0 != rc.rc "
+#    changed_when: true
+#  - debug: var=rc
+
+  - name: DNS not found 2
+    shell: >
+       cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.org
+       && sed -i "s/#DNS=/DNS=8.8.8.8 8.8.4.4 2001:4860:4860::8888 2001:4860:4860::8844/" /etc/systemd/resolved.conf
+       && systemctl restart systemd-resolved.service
+    when: " 0 == rc.rc"
+    become: yes
+

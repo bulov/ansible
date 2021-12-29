@@ -1,0 +1,55 @@
+- hosts: all
+
+  tasks:
+
+  - name: install the latest version of package
+    package:
+       name: nfs-utils
+       state: latest
+    become: yes
+
+  - name:  tuning idmapd.conf
+    lineinfile:
+       dest: /etc/idmapd.conf
+       regexp: "{{ item.regexp }}"
+       line: "{{ item.line }}"
+       state: present
+       backup: yes
+    with_items:
+       - { regexp: '^Domain = ',    line: "Domain = BVG.msk.ru" }
+
+  - name:  tuning /etc/exports.d/*.exports
+    lineinfile:
+       dest: /etc/exports.d/iso.exports
+       regexp: "{{ item.regexp }}"
+       line: "{{ item.line }}"
+       state: present
+       backup: yes
+       create: yes
+    with_items:
+       - { regexp: '^/mnt/iso',    line: "/mnt/iso     192.168.2.0/24(ro,insecure,all_squash)" }
+
+
+  - name: Enable service nfs-server rpcbind
+    systemd:
+      name: "{{ item }}"
+      enabled: yes
+      state: started
+    loop:
+       - nfs-server
+       - rpcbind
+
+
+  - name: Add port to firewalld  for nfs
+    firewalld:
+      service: "{{ item }}"
+      permanent: yes
+      immediate: yes
+      state: enabled
+    loop:
+       - nfs3
+       - mountd
+       - rpc-bind
+
+
+
